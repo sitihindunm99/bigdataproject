@@ -1,12 +1,24 @@
 import requests
 import os
 from dotenv import load_dotenv
+from json import loads
 
-def edit_columns(tweets, topic):
+def edit_columns(tweets, topic, headers):
     for tweet in tweets:
         tweet['topic'] = topic
-        tweet['country'] = ''
         del tweet['edit_history_tweet_ids']
+
+        if 'geo' in tweet:
+            search_url = f"https://api.twitter.com/1.1/geo/id/{tweet['geo']['place_id']}.json"
+            r = requests.get(url=search_url, headers=headers)
+            place_info = loads(r.text)
+
+            try:
+                tweet['country'] = place_info['country']
+                tweet['place_type'] = place_info['place_type']
+            except KeyError:
+                print("key")
+
     return tweets
 
 def run_etl():
@@ -26,7 +38,7 @@ def run_etl():
         query_params = {'query': f'{topic}','tweet.fields': 'text,id','max_results': 100, 'user.fields':'location', 'expansions':'geo.place_id', 'place.fields':'contained_within,country,country_code,full_name,geo,id,name,place_type'}
         r = requests.get(url=search_url, headers=authorization, params=query_params)
         tweets = r.json()
-        tweets['data'] = edit_columns(tweets=tweets['data'], topic=topic)
+        tweets['data'] = edit_columns(tweets=tweets['data'], topic=topic, headers=authorization)
 
         oldest_id = tweets['meta']['oldest_id']
 
@@ -34,7 +46,7 @@ def run_etl():
             query_params['until_id'] = oldest_id
             try:
                 r = requests.get(url=search_url, headers=authorization, params=query_params)
-                next_tweets = edit_columns(tweets=r.json()['data'], topic=topic)
+                next_tweets = edit_columns(tweets=r.json()['data'], topic=topic, headers=authorization)
                 tweets['data'] += next_tweets
                 oldest_id = r.json()['meta']['oldest_id']
                 tweets['meta']['oldest_id'] = oldest_id
