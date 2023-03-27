@@ -54,7 +54,6 @@ def twitter():
     column = df_twitter['text']
     
     pro_vecs = pre_processing(column)
-    
     df_twitter['pro_vecs'] = pro_vecs
     
     df_twitter.drop(columns=['id', 'edit_history_tweet_ids', 'text', 'geo', 'place_type', 'withheld'], inplace=True)
