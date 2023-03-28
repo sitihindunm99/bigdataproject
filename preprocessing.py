@@ -14,8 +14,8 @@ lemmatizer = WordNetLemmatizer()
 
 docs1 = []
 #tokenisation:
-for row in data['column_name']: 
-    doc = nltk.word_tokenize(data["column_name"])
+for row in data['comment']: 
+    doc = nltk.word_tokenize(str(row))
     docs1.append(doc)
 
 #make all words in lowercase
