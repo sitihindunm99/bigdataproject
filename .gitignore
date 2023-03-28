@@ -2,5 +2,3 @@
 .env
 big-data-scraper.pem
 ec2-100-25-26-47.compute-1.amazonaws.com
-reddit_collector.py
-s3_reddit_loader.py

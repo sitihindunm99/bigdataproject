@@ -47,16 +47,16 @@ def pre_processing(column):
     return pro_vecs
 
 def twitter():
-    file_name = "raw/twitter/all_tweets.csv"
+    file_name = "raw/twitter/twitter_output_formatted.json"
     obj = s3.get_object(Bucket= bucket, Key= file_name)
     
-    df_twitter = pd.read_csv(io.BytesIO(obj['Body'].read()))
+    df_twitter = pd.read_json(io.BytesIO(obj['Body'].read()))
     column = df_twitter['text']
     
     pro_vecs = pre_processing(column)
     df_twitter['pro_vecs'] = pro_vecs
     
-    df_twitter.drop(columns=['id', 'edit_history_tweet_ids', 'text', 'geo', 'place_type', 'withheld'], inplace=True)
+    df_twitter.drop(columns=['id', 'text', 'geo', 'place_type'], inplace=True)
     df_twitter['source'] = 'twitter'
     df_twitter['subreddit'] = 'Twitter'
     
