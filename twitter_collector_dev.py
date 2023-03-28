@@ -1,7 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
-from json import loads
+from json import loads, dump
 
 def edit_columns(tweets, topic, headers):
     for tweet in tweets:
@@ -62,4 +62,15 @@ def run_etl():
     print(f"Total Number of Tweets: " + str(len(collated_tweets)))
     with open('twitter_output.json', 'w') as f:
         f.write(str(collated_tweets))
+
+    # To convert JSON to Dict to solve the formatting issue
+    with open('twitter_output.json', 'r') as file:
+        json_string = file.read()
+
+    python_obj = eval(json_string)
+
+    # Open a file for writing
+    with open('twitter_output_formatted.json', 'w') as f:
+        # Write dictionary as JSON data to file
+        dump(python_obj, f)
 run_etl()
