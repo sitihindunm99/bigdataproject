@@ -9,7 +9,7 @@ e.g. scp -i "big-data-scraper.pem" topic.txt ec2-user@ec2-3-232-129-38.compute-1
 e.g. ssh -i "big-data-scraper.pem" ec2-user@ec2-3-232-129-38.compute-1.amazonaws.com 
 4. Verify that files have been copied into instance by running command "ls"
 4. Install python for instance using command "sudo yum install python3"
-5. Install relevant dependencies using command "sudo pip3 install <module>" (python-dotenv, requests)
+5. Install relevant dependencies using command "sudo pip3 install <module>" (python-dotenv, requests, praw)
 e.g. sudo pip3 install requests
 6. Run scraper using command "python3 <scraper file>"
 e.g. python3 twitter_collector.py
