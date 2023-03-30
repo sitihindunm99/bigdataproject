@@ -28,4 +28,4 @@ sentiment_df['subreddit'] = df['subreddit']
 sentiment_df['sentiment'] = sentiment_list
 
 
-sentiment_df.to_csv('sentiment_analysis_output.csv') #change file location
+sentiment_df.to_csv('sentiment_analysis_output.csv', index = False) #change file location

@@ -28,14 +28,14 @@ def pre_processing(column):
         docs1.append(doc)
 
     #noun 
-    nouns = []
-    pos_tag = [nltk.pos_tag(doc) for doc in docs1]
-    for doc in pos_tag: 
-        document = []
-        for w in doc: 
-            if w[1] == 'NN' or w[1] == "NNS": 
-                document.append(w[0])
-        nouns.append(document)
+    # nouns = []
+    # pos_tag = [nltk.pos_tag(doc) for doc in docs1]
+    # for doc in pos_tag: 
+    #     document = []
+    #     for w in doc: 
+    #         if w[1] == 'NN' or w[1] == "NNS": 
+    #             document.append(w[0])
+    #     nouns.append(document)
     
     #make all words in lowercase
     docs2 = [[w.lower() for w in doc] for doc in docs1]
