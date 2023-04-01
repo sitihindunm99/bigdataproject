@@ -4,18 +4,25 @@ import pandas as pd
 import re
 import gensim
 import boto3
+import datetime
+import json
 
+from io import BytesIO
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from collections import Counter
 
-nltk.data.path.append("s3://hindun-is459-project/library")
-nltk.download('stopwords', download_dir="s3://hindun-is459-project/library")
-nltk.download('punkt', download_dir="s3://hindun-is459-project/library")
-nltk.download('wordnet', download_dir="s3://hindun-is459-project/library")
+bucket = "is459-group5-project"
+
+nltk.data.path.append("s3://"+bucket+"/library")
+nltk.download('stopwords', download_dir="s3://"+bucket+"/library")
+nltk.download('punkt', download_dir="s3://"+bucket+"/library")
+nltk.download('wordnet', download_dir="s3://"+bucket+"/library")
+nltk.download('averaged_perceptron_tagger', download_dir="s3://"+bucket+"/library")
 
 s3 = boto3.client('s3')
-bucket = "hindun-is459-project"
+now = datetime.datetime.now()
+timestamp_str = now.strftime("%Y-%m-%d_%H-%M-%S")
 
 def pre_processing(column):
     stop_list = stopwords.words('english')
@@ -66,45 +73,84 @@ def pre_processing(column):
     
     # return pro_vecs
     return pro_docs, docs3
-
+    
 def twitter():
-    file_name = "raw/twitter/twitter_output_formatted.json"
-    obj = s3.get_object(Bucket= bucket, Key= file_name)
+    prefix = 'raw/historical/twitter/'
+    ##################################################
+    ## DESCRIPTION  :   Extract JSON Files in S3 
+    ##################################################
+    df_old = pd.DataFrame()
     
-    df_twitter = pd.read_json(io.BytesIO(obj['Body'].read()))
-    column = df_twitter['text']
-    
-    pro_docs, cleaned_text= pre_processing(column)
-    df_twitter['pro_vecs'] = pro_docs
-    df_twitter['cleaned_text'] = cleaned_text
+    for file in s3.list_objects_v2(Bucket=bucket, Prefix=prefix)['Contents']:
+        if file['Key'].endswith('.json'):
+            obj = s3.get_object(Bucket=bucket, Key=file['Key'])
+            data = obj['Body'].read().decode('utf-8')
+            json_data = json.loads(data)
+            temp_df = pd.DataFrame(json_data)
+            df_old = df_old.append(temp_df, ignore_index=True)
 
-    df_twitter.drop(columns=['id', 'text', 'geo', 'place_type'], inplace=True)
+    ##################################################
+    ## DESCRIPTION  :   Combine Historical Data and New Data
+    ##################################################
+    file_name = "raw/twitter/twitter_output.json"
+    obj = s3.get_object(Bucket= bucket, Key= file_name)
+    df_new = pd.read_json(io.BytesIO(obj['Body'].read()))
+    df_twitter = pd.concat([df_old, df_new], axis=0)
+    column = df_twitter['text']
+    pro_docs, cleaned_text= pre_processing(column)
+    
+    df_twitter['pro_docs'] = pro_docs
+    df_twitter['cleaned_text'] = cleaned_text
+    df_twitter[['topic_chatgpt', 'topic']] = df_twitter['topic'].str.split(' ', expand=True)
+    df_twitter.drop(columns=['id', 'geo', 'topic_chatgpt'], inplace=True)
     df_twitter['source'] = 'twitter'
     df_twitter['subreddit'] = 'Twitter'
+    
+    s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': file_name}, Key="raw/historical/twitter/twitter_output_" + timestamp_str + ".json")
+    s3.delete_object(Bucket=bucket, Key=file_name)
     
     return df_twitter
     
 def reddit():
-    file_name = "raw/reddit/reddit_output.csv"
+    prefix = 'raw/historical/reddit/'
+    ##################################################
+    ## DESCRIPTION  :   Extract XLSX Files in S3 
+    ##################################################
+    objects = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    dfs = []
+    
+    for obj in objects['Contents']:
+        if obj['Key'].endswith('.xlsx'):
+            file_obj = s3.get_object(Bucket=bucket, Key=obj['Key'])['Body'].read()
+            df = pd.read_excel(BytesIO(file_obj))
+            dfs.append(df)
+    
+    df_old = pd.concat(dfs, ignore_index=True)
+    
+    ##################################################
+    ## DESCRIPTION  :   Combine Historical Data and New Data
+    ##################################################
+    file_name = "raw/reddit/reddit_output_small.xlsx"
     obj = s3.get_object(Bucket= bucket, Key= file_name)
     
-    df_reddit = pd.read_csv(io.BytesIO(obj['Body'].read()))
+    df_new = pd.read_excel(BytesIO(file_obj))
+    df_reddit = pd.concat([df_old, df_new], axis=0)
     column = df_reddit['comment']
-    
     pro_docs, cleaned_text = pre_processing(column)
+    
     df_reddit['pro_docs'] = pro_docs
     df_reddit['cleaned_text'] = cleaned_text
-
-    
-    df_reddit.drop(columns=['title', 'id', 'score', 'num_comments', 'comment', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8'], inplace=True)
+    df_reddit.drop(columns=['title', 'id', 'score', 'num_comments', 'comment'], inplace=True)
     df_reddit['source'] = 'reddit'
+    
+    s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': file_name}, Key="raw/historical/reddit/reddit_output_small_" + timestamp_str + ".json")
+    s3.delete_object(Bucket=bucket, Key=file_name)
     
     return df_reddit
 
 df_twitter = twitter()
 df_reddit = reddit()
 
+# final columns should be ['topic', 'country', 'source', 'subreddit', 'text', 'cleaned_text', 'pro_docs']
 df_combined = pd.concat([df_twitter, df_reddit], axis=0)
-# final columns should be ["topic", 'country', 'source', 'subreddit', "text", 'cleaned_text', 'pro_docs']
-
-df_combined.to_csv('s3://hindun-is459-project/cleaned/cleaned_data.csv', index=False)
+df_combined.to_csv("s3://"+bucket+"/cleaned/cleaned_data_combined.csv", index=False)
