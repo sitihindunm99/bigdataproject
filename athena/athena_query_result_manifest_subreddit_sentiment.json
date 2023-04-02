@@ -1,0 +1,16 @@
+{
+    "fileLocations": [
+        {
+            "URIs": [
+                "s3://bigdataproject-testing-raw-data/sentiment-analysis/subreddit_sentiment_query.csv"
+            ]
+        }
+    ],
+    "globalUploadSettings": {
+        "format": "CSV",
+        "delimiter": ",",
+        "textqualifier": "\"",
+        "containsHeader": "true"
+    }
+}
+                            
