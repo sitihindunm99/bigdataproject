@@ -116,7 +116,7 @@ def reddit():
     df_reddit['cleaned_text'] = cleaned_text
     df_reddit['source'] = 'reddit'
 
-    s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': file_name}, Key="raw/historical/reddit/reddit_output_small_" + timestamp_str + ".json")
+    s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': file_name}, Key="raw/historical/reddit/reddit_output_" + timestamp_str + ".json")
     s3.delete_object(Bucket=bucket, Key=file_name)
     
     return df_reddit
