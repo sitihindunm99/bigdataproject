@@ -29,33 +29,13 @@ def pre_processing(column):
     lemmatizer = WordNetLemmatizer()
 
     docs1 = []
-    #tokenisation:
     for row in column: 
         doc = nltk.word_tokenize(str(row))
         docs1.append(doc)
-
-    #noun 
-    # nouns = []
-    # pos_tag = [nltk.pos_tag(doc) for doc in docs1]
-    # for doc in pos_tag: 
-    #     document = []
-    #     for w in doc: 
-    #         if w[1] == 'NN' or w[1] == "NNS": 
-    #             document.append(w[0])
-    #     nouns.append(document)
     
-    #make all words in lowercase
     docs2 = [[w.lower() for w in doc] for doc in docs1]
-
-    #remove punctuation+numbers
     docs3 = [[w for w in doc if re.search('^[a-z]+$', w)] for doc in docs2]
-
-    #remove stopwords 
     docs4 = [[w for w in doc if w not in stop_list] for doc in docs3]
-
-    #lemmatize
-    docs5 = [[lemmatizer.lemmatize(w) for w in doc] for doc in docs4]
-
     docs5 = [[lemmatizer.lemmatize(w) for w in doc] for doc in docs4]
 
     flatten_pro_docs = [word for post in docs5 for word in post]
@@ -63,15 +43,8 @@ def pre_processing(column):
     threshold = 10000
    
     common_words = [word for word, count in word_counts.most_common() if count>= threshold]
-
     pro_docs = [[w for w in doc if w not in common_words] for doc in docs5]
-    #convert words to vectors 
-    # dictionary = gensim.corpora.Dictionary(pro_docs)
-    # vecs1 = [dictionary.doc2bow(doc) for doc in pro_docs]
-    # tfidf = gensim.models.TfidfModel(vecs1)
-    # pro_vecs = [tfidf[vec] for vec in vecs1]
     
-    # return pro_vecs
     return pro_docs, docs3
     
 def twitter():
@@ -97,15 +70,15 @@ def twitter():
     df_new = pd.read_json(io.BytesIO(obj['Body'].read()))
     df_twitter = pd.concat([df_old, df_new], axis=0)
     column = df_twitter['text']
+
     pro_docs, cleaned_text= pre_processing(column)
     
     df_twitter['pro_docs'] = pro_docs
     df_twitter['cleaned_text'] = cleaned_text
     df_twitter[['topic_chatgpt', 'topic']] = df_twitter['topic'].str.split(' ', expand=True)
-    df_twitter.drop(columns=['id', 'geo', 'topic_chatgpt'], inplace=True)
     df_twitter['source'] = 'twitter'
     df_twitter['subreddit'] = 'Twitter'
-    
+
     s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': file_name}, Key="raw/historical/twitter/twitter_output_" + timestamp_str + ".json")
     s3.delete_object(Bucket=bucket, Key=file_name)
     
@@ -130,20 +103,21 @@ def reddit():
     ##################################################
     ## DESCRIPTION  :   Combine Historical Data and New Data
     ##################################################
-    file_name = "raw/reddit/reddit_output_small.xlsx"
-    obj = s3.get_object(Bucket= bucket, Key= file_name)
+    file_name = "raw/reddit/reddit_output.xlsx"
+    s3_object = s3.get_object(Bucket=bucket, Key=file_name)
+    s3_content = s3_object['Body'].read()
+    df_new = pd.read_excel(BytesIO(s3_content))
     
-    df_new = pd.read_excel(BytesIO(file_obj))
     df_reddit = pd.concat([df_old, df_new], axis=0)
     column = df_reddit['comment']
+
     pro_docs, cleaned_text = pre_processing(column)
     
     df_reddit['pro_docs'] = pro_docs
     df_reddit['cleaned_text'] = cleaned_text
-    df_reddit.drop(columns=['title', 'id', 'score', 'num_comments', 'comment'], inplace=True)
     df_reddit['source'] = 'reddit'
-    
-    s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': file_name}, Key="raw/historical/reddit/reddit_output_small_" + timestamp_str + ".json")
+
+    s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': file_name}, Key="raw/historical/reddit/reddit_output_" + timestamp_str + ".json")
     s3.delete_object(Bucket=bucket, Key=file_name)
     
     return df_reddit
@@ -151,6 +125,7 @@ def reddit():
 df_twitter = twitter()
 df_reddit = reddit()
 
-# final columns should be ['topic', 'country', 'source', 'subreddit', 'text', 'cleaned_text', 'pro_docs']
+# final columns should be ['text', 'topic', 'country', 'pro_docs', 'cleaned_text', 'source', 'subreddit']
 df_combined = pd.concat([df_twitter, df_reddit], axis=0)
-df_combined.to_csv("s3://"+bucket+"/cleaned/cleaned_data_combined.csv", index=False)
+df_combined.drop(columns=['id', 'geo', 'place_type', 'topic_chatgpt', 'title', 'score', 'num_comments', 'comment'], inplace=True)
+df_combined.to_excel("s3://"+bucket+"/cleaned/cleaned_data_combined.xlsx", index=False)
