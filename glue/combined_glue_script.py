@@ -104,9 +104,10 @@ def reddit():
     ## DESCRIPTION  :   Combine Historical Data and New Data
     ##################################################
     file_name = "raw/reddit/reddit_output.xlsx"
-    obj = s3.get_object(Bucket= bucket, Key= file_name)
+    s3_object = s3.get_object(Bucket=bucket, Key=file_name)
+    s3_content = s3_object['Body'].read()
+    df_new = pd.read_excel(BytesIO(s3_content))
     
-    df_new = pd.read_excel(BytesIO(file_obj))
     df_reddit = pd.concat([df_old, df_new], axis=0)
     column = df_reddit['comment']
 
