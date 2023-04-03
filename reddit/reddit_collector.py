@@ -41,5 +41,3 @@ def run_reddit_collector():
     # Save to a excel file
     submissions.to_excel('reddit_output_excel.xlsx', index=False)
 
-
-run_reddit_collector()
