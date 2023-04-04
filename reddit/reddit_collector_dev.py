@@ -6,17 +6,13 @@ from openpyxl import workbook # pip install this
 reddit = praw.Reddit(client_id='pPZ0qlVkD3x10Lax-FnXNQ', client_secret='gMYonicoK5AxBIW-sWb1I8FbUsgiwA', user_agent='Crypto WebScraping')
 
 def subreddit_and_keyword_scraper(subreddit, keyword, submissions):
-#     for submission in reddit.subreddit(subreddit).search(keyword, limit=5000): 
-    for submission in reddit.subreddit(subreddit).search('title:"{}" selftext:"{}"'.format(keyword, keyword)):
+    for submission in reddit.subreddit(subreddit).search(keyword, limit=5000): 
         submission.comments.replace_more(limit=None)
-        print(submission.selftext)
 
         submissions.append([submission.title, submission.score, submission.id, submission.subreddit, keyword, submission.num_comments, submission.selftext])
 
         for comment in submission.comments.list():
             submissions.append([submission.title, submission.score, submission.id, submission.subreddit, keyword, submission.num_comments, comment.body])
-        print(subreddit)
-        print(keyword)
 
 
 def run_reddit_collector():
