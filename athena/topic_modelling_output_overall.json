@@ -2,7 +2,7 @@
     "fileLocations": [
         {
             "URIs": [
-                "s3://is459_group5_project/query-result/education_level_query.csv"                
+                "s3://is459_group5_project/insights/topic-modelling/overall.csv"                
             ]
         }
     ],

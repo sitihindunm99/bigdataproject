@@ -2,7 +2,7 @@
     "fileLocations": [
         {
             "URIs": [
-                "s3://bigdataproject-testing-raw-data/sentiment-analysis/overall_sentiment_query.csv"
+                "s3://is459_group5_project/query-result/overall_sentiment_query.csv"
             ]
         }
     ],
