@@ -12,7 +12,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from collections import Counter
 
-bucket = "is459-group5-project"
+bucket = "is459-grp5-project"
 
 nltk.data.path.append("s3://"+bucket+"/library")
 nltk.download('stopwords', download_dir="s3://"+bucket+"/library")
@@ -50,7 +50,7 @@ def pre_processing(column):
 def twitter():
     prefix = 'raw/historical/twitter/'
     ##################################################
-    ## DESCRIPTION  :   Extract JSON Files in S3 
+    ## DESCRIPTION  :   Extract Historical JSON Files to on DF in S3 
     ##################################################
     df_old = pd.DataFrame()
     
@@ -87,7 +87,7 @@ def twitter():
 def reddit():
     prefix = 'raw/historical/reddit/'
     ##################################################
-    ## DESCRIPTION  :   Extract XLSX Files in S3 
+    ## DESCRIPTION  :   Extract Historical XLSX Files to on DF in S3 
     ##################################################
     objects = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
     dfs = []
@@ -99,12 +99,13 @@ def reddit():
             dfs.append(df)
     
     df_old = pd.concat(dfs, ignore_index=True)
-    
+    print("IN REDDIT FUNC")
     ##################################################
     ## DESCRIPTION  :   Combine Historical Data and New Data
     ##################################################
     file_name = "raw/reddit/reddit_output.xlsx"
-    s3_object = s3.get_object(Bucket=bucket, Key=file_name)
+    s3_object = s3.get_object(Bucket= bucket, Key= file_name)
+    print(s3_object)
     s3_content = s3_object['Body'].read()
     df_new = pd.read_excel(BytesIO(s3_content))
     
@@ -117,7 +118,7 @@ def reddit():
     df_reddit['cleaned_text'] = cleaned_text
     df_reddit['source'] = 'reddit'
 
-    s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': file_name}, Key="raw/historical/reddit/reddit_output_" + timestamp_str + ".json")
+    s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': file_name}, Key="raw/historical/reddit/reddit_output_" + timestamp_str + ".xlsx")
     s3.delete_object(Bucket=bucket, Key=file_name)
     
     return df_reddit
@@ -128,4 +129,4 @@ df_reddit = reddit()
 # final columns should be ['text', 'topic', 'country', 'pro_docs', 'cleaned_text', 'source', 'subreddit']
 df_combined = pd.concat([df_twitter, df_reddit], axis=0)
 df_combined.drop(columns=['id', 'geo', 'place_type', 'topic_chatgpt', 'title', 'score', 'num_comments', 'comment'], inplace=True)
-df_combined.to_excel("s3://"+bucket+"/cleaned/cleaned_data_combined.xlsx", index=False)
+df_combined.to_csv("s3://"+bucket+"/cleaned/cleaned_data_combined.csv", index=False)
