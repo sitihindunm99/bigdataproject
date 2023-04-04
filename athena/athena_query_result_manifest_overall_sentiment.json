@@ -2,7 +2,7 @@
     "fileLocations": [
         {
             "URIs": [
-                "s3://is459_group5_project/query-result/overall_sentiment_query.csv"
+                "s3://is459-grp5-project/query-result/overall_sentiment_query.csv"
             ]
         }
     ],

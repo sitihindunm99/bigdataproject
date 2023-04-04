@@ -2,7 +2,7 @@
     "fileLocations": [
         {
             "URIs": [
-                "s3://is459_group5_project/insights/topic-modelling/elementary_school.csv"                
+                "s3://is459-grp5-project/insights/topic-modelling/elementary_school.csv"                
             ]
         }
     ],
