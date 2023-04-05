@@ -4,7 +4,7 @@ Steps to setup project:
 Steps to create instance, transfer file, install dependencies and run scraper:
 1. Create EC2 instance (use everything free-tier like linux image, default SG etc) & generate key pem if needed (chmod 400 to reduce the permission for key pem)
 2. Copy scraper file (twitter_collector.py), env file (.env) and topic file (topic.txt) from local file system to instance file system using command "scp -i <path to pemfile.pem> <path to file to transfer> <user>@<public DNS>:<directory to transfer to>"
-e.g. scp -i "big-data-scraper.pem" topic.txt ec2-user@ec2-3-232-129-38.compute-1.amazonaws.com:~/ 
+e.g. scp -i "big-data-scraper.pem" twitter/topic_live.txt requirements.txt run_script_live.sh twitter/twitter_collector_live.py twitter/.env reddit/reddit_collector_live.py ec2-user@ec2-18-234-226-142.compute-1.amazonaws.com:~/
 3. Gain remote access to instance using command "ssh -i <path to pemfile.pem> <username>@<public DNS>" (default username is ec2-user)
 e.g. ssh -i "big-data-scraper.pem" ec2-user@ec2-3-232-129-38.compute-1.amazonaws.com 
 4. Verify that files have been copied into instance by running command "ls"

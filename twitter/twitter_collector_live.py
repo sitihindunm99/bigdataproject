@@ -26,7 +26,7 @@ def run_etl():
 
     # Get the topics from topic.txt
     topics = []
-    with open('./twitter/topic_live.txt') as f:
+    with open('./topic_live.txt') as f:
         topics = [line.rstrip() for line in f]
 
     # Credentials for Twitter API
@@ -58,9 +58,9 @@ def run_etl():
         # Insert tweets into collated tweets list
         collated_tweets += tweets['data']
         print("Number of Tweets for topic {0}: ".format(topic) + str(len(tweets['data'])))
-        
+
     # Write tweets to JSON file
-    with open('./twitter/twitter_output.json', 'w') as f:
+    with open('./twitter_output.json', 'w') as f:
         dump(eval(str(collated_tweets)), f)
     print(f"Total Number of Tweets: " + str(len(collated_tweets)))
 
