@@ -10,6 +10,7 @@ e.g. ssh -i "big-data-scraper.pem" ec2-user@ec2-3-232-129-38.compute-1.amazonaws
 4. Verify that files have been copied into instance by running command "ls"
 4. Install python for instance using command "sudo yum install python3"
 5. Install relevant dependencies using command "sudo pip3 install <module>" (python-dotenv, requests, praw)
+if pip3: command not found run: sudo yum install python3-pip
 e.g. sudo pip3 install requests
 6. Run scraper using command "python3 <scraper file>"
 e.g. python3 twitter_collector.py
@@ -33,3 +34,16 @@ e.g. python3 s3_loader.py
 Extra:
 - if sudo yum install does not work, try sudo apt-get install
 - default ec2 linux instance uses python 2.7 so certain syntax might be slightly different
+
+to create ec2 instance for modelling: 
+- choose t2.small 
+
+to set up cron job
+- sudo yum install cronie
+- crontab -e
+- press i 
+- enter cron expression (in UTC time format) 
+    - (minute hour * * day_of_week) 34 13 * * 6 /usr/bin/python3 /home/ec2-user/sentiment_analysis_script.py
+    - (minute hour * * day_of_week) 39 13 * * 6 /usr/bin/python3 /home/ec2-user/topic_modelling_script.py  
+- press esc then :wq then enter to save 
+- ensure cron service is running: pgrep cron

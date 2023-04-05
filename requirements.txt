@@ -1,8 +1,0 @@
-openpyxl
-pandas
-gensim
-textblob
-boto3
-python-dotenv
-requests
-praw
